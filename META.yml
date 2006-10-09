@@ -1,0 +1,19 @@
+---
+name: Devel-EnforceEncapsulation
+version: 0.01
+author:
+  - 'Clotho Advanced Media, Inc. <cpan@clotho.com>'
+abstract: Find access violations to blessed objects
+license: perl
+resources:
+  license: perl://dev.perl.org/licenses/
+build_requires:
+  Test::More: 0
+provides:
+  Devel::EnforceEncapsulation:
+    file: lib/Devel/EnforceEncapsulation.pm
+    version: 0.01
+generated_by: Module::Build version 0.2805
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2
