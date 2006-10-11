@@ -1,8 +1,8 @@
 #######################################################################
 #      $URL: https://svn.clotho.com/clotho/Devel-EnforceEncapsulation/lib/Devel/EnforceEncapsulation.pm $
-#     $Date: 2006-10-09 14:53:31 -0500 (Mon, 09 Oct 2006) $
+#     $Date: 2006-10-11 08:55:57 -0500 (Wed, 11 Oct 2006) $
 #   $Author: chris $
-# $Revision: 2920 $
+# $Revision: 2931 $
 ########################################################################
 
 package Devel::EnforceEncapsulation;
@@ -11,18 +11,24 @@ use warnings;
 use strict;
 use English qw(-no_match_vars);
 use Carp;
-require overload;
+use overload;
 
-our $VERSION = '0.01';
+our $VERSION = '0.50';
 
 sub apply_to {
    my $pkg      = shift;
    my $dest_pkg = shift;
+   my $opts     = shift || {};
+
+   $opts->{policy} ||= 'croak';
+   if (!eval { $pkg->can('_deref_overload_' . $opts->{policy}) }) {
+      croak "Unknown encapsulation policy '$opts->{policy}'";
+   }
 
    ## no critic(ProhibitStringyEval,RequireCarping)
-   my $fn = __PACKAGE__ . '::_deref_overload';
+   my $fn = __PACKAGE__ . '::_deref_overload_' . $opts->{policy};
    my $overloads = join q{,}, map { "'$_' => \\&$fn" } $pkg->_ops;
-   eval "{package $dest_pkg; use overload $overloads;}";
+   eval "{package $dest_pkg; use overload $overloads, fallback => 1;}";
    die $EVAL_ERROR if $EVAL_ERROR;
    return;
 }
@@ -33,19 +39,31 @@ sub remove_from {
 
    ## no critic(ProhibitStringyEval,RequireCarping)
    my $overloads = join q{,}, map { "'$_'" } $pkg->_ops;
-   eval "{package $dest_pkg; no overload $overloads;}";
+   eval "{package $dest_pkg; no overload $overloads, 'fallback';}";
    die $EVAL_ERROR if $EVAL_ERROR;
    return;
 }
 
-# callback to be installed as overload
-sub _deref_overload {
+## possible callbacks to be installed via overload ##
+
+sub _deref_overload_croak {
    my $self = shift;
 
    my $caller_pkg = caller;
    if (!$self->isa($caller_pkg)) {
       my $pkg = ref $self;
       croak "Illegal attempt to access $pkg internals from $caller_pkg";
+   }
+   return $self;
+}
+
+sub _deref_overload_carp {
+   my $self = shift;
+
+   my $caller_pkg = caller;
+   if (!$self->isa($caller_pkg)) {
+      my $pkg = ref $self;
+      carp "Illegal attempt to access $pkg internals from $caller_pkg";
    }
    return $self;
 }
@@ -64,7 +82,7 @@ __END__
 
 =pod
 
-=for stopwords perlmonks.org ben Jore
+=for stopwords  perlmonks.org  ben Jore  Signes
 
 =head1 NAME
 
@@ -130,19 +148,45 @@ evil (making life harder for downstream developers).
 
 =over
 
-=item Class::Encapsulate::Runtime->apply_to($other_pkg);
+=item $pkg->apply_to($other_pkg);
 
-=item Class::Encapsulate::Runtime->remove_from($other_pkg);
+=item $pkg->apply_to($other_pkg, {policy => 'carp'});
 
-Add or remove strict encapsulation to an existing C<$other_pkg>.
+Add strict encapsulation to an existing C<$other_pkg>.  The encapsulation
+changes only apply to instances created after the call.
+
+The optional C<policy> argument allows you to change the response to an
+illegal access.  By default the policy is C<croak>, which invokes
+C<Carp::croak()>.  The alternative is C<carp> which invokes C<Carp::carp()>
+instead.
+
+=item $pkg->remove_from($other_pkg);
+
+Remove any encapsulation previously set by C<apply_to()>.  This does not
+affect instances created before this call.
 
 =back
 
 =head1 SEE ALSO
 
-L<Class::Encapsulate> is a proposed module by Curtis "Ovid" Poe (not
-yet on CPAN as of this writing) that will provide a production-ready
-implementation of this technique.
+=head2 L<Class::Privacy>
+
+Class::Privacy is a very similar implementation that is, in general, stricter
+than this module.  The key differences:
+
+=over
+
+=item * D::E applies externally post-facto; C::P from inside the code.
+
+=item * D::E allows access from sub/superclasses; C::P does not (deliberately!).
+
+=item * D::E supports all dereferencers from overload.pm; C::P supports C<%>, C<@>, C<$>, and C<&>.
+
+=item * D::E allows access from anything in the same package; C::P allows access only from matching package AND file.
+
+=back
+
+=head2 Inside-out classes
 
 L<Class::InsideOut>, L<Object::InsideOut> and L<Class::Std> are all
 implementations of "inside-out" objects, which offer a stricter
@@ -177,7 +221,15 @@ the following quality metrics:
 
 =item * Test::Portability::Files passes
 
+=item * Test::Kwalitee passes
+
 =back
+
+=head1 CAVEATS
+
+The regression tests do not cover blessed code or glob references.
+
+Any other issues: L<http://rt.cpan.org/Dist/Display.html?Queue=Devel-EnforceEncapsulation>
 
 =head1 AUTHOR
 
@@ -192,9 +244,12 @@ Curtis "Ovid" Poe on
 L<http://www.perlmonks.org/?node_id=576707|perlmonks.org>.  Adrian has
 authorized me to release a variant of his code under the Perl license.
 
-Joshua ben Jore suggested some great improvements that significantly
-simplified yet generalized the implementation.
-L<http://use.perl.org/comments.pl?sid=33253&cid=50863>
+Joshua ben Jore provided crucial improvements that simplified yet generalized
+the implementation.  This module would not be half as useful without his
+contributions.  L<http://use.perl.org/comments.pl?sid=33253&cid=50863>
+
+Ricardo Signes contributed the C<{policy => 'carp'}> feature (with tests!).
+L<http://rt.cpan.org/Ticket/Display.html?id=22024>
 
 =cut
 
