@@ -1,8 +1,8 @@
 #######################################################################
-#      $URL: https://svn.clotho.com/clotho/Devel-EnforceEncapsulation/lib/Devel/EnforceEncapsulation.pm $
-#     $Date: 2006-10-11 08:55:57 -0500 (Wed, 11 Oct 2006) $
-#   $Author: chris $
-# $Revision: 2931 $
+#      $URL: svn+ssh://equilibrious@equilibrious.net/home/equilibrious/Mirror/medialandscape/repos/clotho/Devel-EnforceEncapsulation/lib/Devel/EnforceEncapsulation.pm $
+#     $Date: 2014-03-27 18:57:41 -0500 (Thu, 27 Mar 2014) $
+#   $Author: equilibrious $
+# $Revision: 3356 $
 ########################################################################
 
 package Devel::EnforceEncapsulation;
@@ -13,7 +13,7 @@ use English qw(-no_match_vars);
 use Carp;
 use overload;
 
-our $VERSION = '0.50';
+our $VERSION = '0.51';
 
 sub apply_to {
    my $pkg      = shift;
@@ -109,6 +109,7 @@ Devel::EnforceEncapsulation - Find access violations to blessed objects
 
 =head1 LICENSE
 
+Copyright 2014 Chris Dolan, <cpan@chrisdolan.net>
 Copyright 2006 Clotho Advanced Media, Inc., <cpan@clotho.com>
 
 This library is free software; you can redistribute it and/or modify it

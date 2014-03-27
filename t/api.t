@@ -26,7 +26,12 @@ BEGIN
    is $o->{secret}, 1, 'Unencapsulated classes are not affected';
 
    Devel::EnforceEncapsulation->apply_to('Hash_class');
-   is $o->{secret}, 1, 'Unencapsulated instances are still not affected';
+   if ( $] >= 5.017 ) {
+      eval { my $val = $o->{secret}; };
+      ok $@, 'Previously-unencapsulated instances are now encapsulated';
+   } else {
+      is $o->{secret}, 1, 'Unencapsulated instances are still not affected';
+   }
 
    $o = Hash_class->new;
    $o->foo(2);
@@ -51,8 +56,12 @@ BEGIN
    ok $@, 'Cannot reach into objects';
 
    Devel::EnforceEncapsulation->remove_from('Hash_class');
-   eval { my $val = $o->{secret};  $val = $s->{secret}; };
-   ok $@, 'Still cannot reach into runtime injected objects';
+   if ( $] >= 5.017 ) {
+      is $o->{secret}, 2, 'Encapsulated instances now unencapsulated';
+   } else {
+      eval { my $val = $o->{secret};  $val = $s->{secret}; };
+      ok $@, 'Still cannot reach into runtime injected objects';
+   }
 
    $o = Hash_class->new;
    $o->foo(3);

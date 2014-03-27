@@ -3,6 +3,7 @@ Devel::EnforceEncapsulation - Find access violations to blessed objects
 
 LICENSE
 
+Copyright 2014 Chris Dolan, <cpan@chrisdolan.net>
 Copyright 2006 Clotho Advanced Media, Inc., <cpan@clotho.com>
 
 This library is free software; you can redistribute it and/or modify it
@@ -12,7 +13,8 @@ under the same terms as Perl itself.
 ABOUT CLOTHO
 
 "CAM" stands for Clotho Advanced Media Inc. (www.clotho.com) which
-developed this module.  Contact us at cpan@clotho.com.
+developed this module. I (Chris Dolan) was the original developer, and
+I now lightly maintain this module in my spare time.
 
 
 INSTALLATION
